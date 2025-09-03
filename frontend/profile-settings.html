@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <title>Kolon - 개인정보 설정</title>
+    <style>
+        body{font-family:system-ui,sans-serif;background:#faf9fb;margin:0}
+        .container{max-width:600px;margin:0 auto;padding:20px}
+        .header{display:flex;justify-content:space-between;align-items:center;padding:20px 0;border-bottom:1px solid #ece7f6}
+        .brand{font-size:24px;font-weight:800;color:#6b47d6;text-decoration:none}
+        .settings-section{background:#fff;border:1px solid #ece7f6;border-radius:12px;padding:20px;margin-bottom:20px}
+        .section-title{font-size:18px;font-weight:600;margin-bottom:15px}
+        .profile-photo{text-align:center;margin-bottom:20px}
+        .photo-circle{width:100px;height:100px;border-radius:50%;background:#f6f2ff;display:inline-flex;align-items:center;justify-content:center;font-size:48px;margin-bottom:10px}
+        .photo-btn{padding:8px 16px;background:#6b47d6;color:#fff;border:none;border-radius:4px;cursor:pointer}
+        .form-group{margin-bottom:15px}
+        .form-group label{display:block;margin-bottom:5px;font-weight:500}
+        .form-group input{width:100%;padding:10px;border:1px solid #ece7f6;border-radius:6px}
+        .btn{padding:12px 24px;background:#6b47d6;color:#fff;border:none;border-radius:6px;cursor:pointer;margin-right:10px}
+        .btn-secondary{background:#7c7587}
+        .notice{background:#f6f2ff;padding:15px;border-radius:8px;color:#6b47d6;font-size:14px;margin-top:15px}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <a href="index.html" class="brand">Kolon</a>
+            <a href="mypage.html" style="color:#6b47d6;text-decoration:none">← 마이페이지</a>
+        </div>
+        
+        <h2>개인정보 설정</h2>
+        
+        <div class="settings-section">
+            <div class="section-title">프로필 사진</div>
+            <div class="profile-photo">
+                <div class="photo-circle">👤</div><br>
+                <button class="photo-btn">사진 변경</button>
+            </div>
+            <div class="notice">
+                ℹ️ 프로필 사진 변경 기능은 현재 UI만 제공됩니다.
+            </div>
+        </div>
+        
+        <div class="settings-section">
+            <div class="section-title">기본 정보</div>
+            <form id="profileForm">
+                <div class="form-group">
+                    <label for="name">이름</label>
+                    <input type="text" id="name" name="name" placeholder="이름을 입력하세요">
+                </div>
+                
+                <div class="form-group">
+                    <label for="email">이메일</label>
+                    <input type="email" id="email" name="email" placeholder="이메일을 입력하세요" readonly>
+                </div>
+                
+                <div class="form-group">
+                    <label for="phone">전화번호</label>
+                    <input type="tel" id="phone" name="phone" placeholder="전화번호를 입력하세요">
+                </div>
+                
+                <button type="button" class="btn" onclick="saveProfile()">저장</button>
+                <button type="button" class="btn btn-secondary" onclick="resetForm()">취소</button>
+            </form>
+            <div class="notice">
+                ℹ️ 개인정보 수정 기능은 현재 UI만 제공됩니다.
+            </div>
+        </div>
+        
+        <div class="settings-section">
+            <div class="section-title">비밀번호 변경</div>
+            <form id="passwordForm">
+                <div class="form-group">
+                    <label for="currentPassword">현재 비밀번호</label>
+                    <input type="password" id="currentPassword" name="currentPassword">
+                </div>
+                
+                <div class="form-group">
+                    <label for="newPassword">새 비밀번호</label>
+                    <input type="password" id="newPassword" name="newPassword">
+                </div>
+                
+                <div class="form-group">
+                    <label for="confirmPassword">새 비밀번호 확인</label>
+                    <input type="password" id="confirmPassword" name="confirmPassword">
+                </div>
+                
+                <button type="button" class="btn" onclick="changePassword()">비밀번호 변경</button>
+            </form>
+            <div class="notice">
+                ℹ️ 비밀번호 변경 기능은 현재 UI만 제공됩니다.
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            loadUserInfo();
+        });
+
+        function loadUserInfo() {
+            const userName = localStorage.getItem('userName') || '';
+            const userEmail = localStorage.getItem('userEmail') || '';
+            
+            document.getElementById('name').value = userName;
+            document.getElementById('email').value = userEmail;
+        }
+
+        function saveProfile() {
+            alert('개인정보 수정 기능은 현재 UI만 제공됩니다.\n실제 기능은 백엔드 API 연동 후 구현됩니다.');
+        }
+
+        function resetForm() {
+            loadUserInfo();
+        }
+
+        function changePassword() {
+            const currentPassword = document.getElementById('currentPassword').value;
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            
+            if (!currentPassword || !newPassword || !confirmPassword) {
+                alert('모든 비밀번호 필드를 입력해주세요.');
+                return;
+            }
+            
+            if (newPassword !== confirmPassword) {
+                alert('새 비밀번호가 일치하지 않습니다.');
+                return;
+            }
+            
+            alert('비밀번호 변경 기능은 현재 UI만 제공됩니다.\n실제 기능은 백엔드 API 연동 후 구현됩니다.');
+            
+            // 폼 초기화
+            document.getElementById('passwordForm').reset();
+        }
+    </script>
+</body>
+</html>

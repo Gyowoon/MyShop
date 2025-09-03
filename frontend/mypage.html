@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <title>Kolon - 마이페이지</title>
+    <style>
+        body{font-family:system-ui,sans-serif;background:#faf9fb;margin:0}
+        .container{max-width:1100px;margin:0 auto;padding:20px}
+        .header{display:flex;justify-content:space-between;align-items:center;padding:20px 0;border-bottom:1px solid #ece7f6}
+        .brand{font-size:24px;font-weight:800;color:#6b47d6;text-decoration:none}
+        .user-info{background:#fff;border:1px solid #ece7f6;border-radius:12px;padding:20px;margin-bottom:20px;display:flex;align-items:center;gap:20px}
+        .profile-img{width:80px;height:80px;background:#f6f2ff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:32px}
+        .user-details h3{margin:0 0 5px 0}
+        .user-details p{margin:0;color:#7c7587}
+        .menu-grid{display:grid;grid-template-columns:repeat(auto-fit, minmax(250px, 1fr));gap:20px}
+        .menu-item{background:#fff;border:1px solid #ece7f6;border-radius:12px;padding:20px;text-align:center;text-decoration:none;color:inherit;transition:transform 0.2s}
+        .menu-item:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.08)}
+        .menu-icon{font-size:32px;margin-bottom:10px}
+        .menu-title{font-size:18px;font-weight:600;margin-bottom:5px}
+        .menu-desc{color:#7c7587;font-size:14px}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <a href="index.html" class="brand">Kolon</a>
+            <div>
+                <a href="cart.html" style="margin-right:15px;color:#6b47d6;text-decoration:none">장바구니</a>
+                <a href="#" onclick="logout()" style="color:#e74c3c;text-decoration:none">로그아웃</a>
+            </div>
+        </div>
+        
+        <div class="user-info">
+            <div class="profile-img" id="profileImg">👤</div>
+            <div class="user-details">
+                <h3 id="userName">사용자</h3>
+                <p id="userEmail">user@example.com</p>
+                <p>보유 포인트: <strong id="userPoints">0</strong>P</p>
+            </div>
+        </div>
+        
+        <div class="menu-grid">
+            <a href="order-history.html" class="menu-item">
+                <div class="menu-icon">📦</div>
+                <div class="menu-title">주문내역</div>
+                <div class="menu-desc">주문 상태 및 배송 정보 확인</div>
+            </a>
+            
+            <a href="recently-viewed.html" class="menu-item">
+                <div class="menu-icon">👁️</div>
+                <div class="menu-title">최근 본 상품</div>
+                <div class="menu-desc">최근에 본 상품 목록</div>
+            </a>
+            
+            <a href="profile-settings.html" class="menu-item">
+                <div class="menu-icon">⚙️</div>
+                <div class="menu-title">개인정보 설정</div>
+                <div class="menu-desc">프로필 및 계정 정보 관리</div>
+            </a>
+            
+            <a href="points.html" class="menu-item">
+                <div class="menu-icon">💰</div>
+                <div class="menu-title">포인트</div>
+                <div class="menu-desc">포인트 사용 내역 및 잔액</div>
+            </a>
+        </div>
+    </div>
+
+    <script>
+        function logout() {
+            if (confirm('로그아웃 하시겠습니까?')) {
+                localStorage.clear();
+                window.location.href = 'index.html';
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const userName = localStorage.getItem('userName') || '사용자';
+            const userEmail = localStorage.getItem('userEmail') || 'user@example.com';
+            const userPoints = localStorage.getItem('userPoints') || '0';
+            
+            document.getElementById('userName').textContent = userName;
+            document.getElementById('userEmail').textContent = userEmail;
+            document.getElementById('userPoints').textContent = parseInt(userPoints).toLocaleString();
+        });
+    </script>
+</body>
+</html>

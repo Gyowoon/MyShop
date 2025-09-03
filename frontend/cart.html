@@ -1,0 +1,150 @@
+
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <title>Kolon - 장바구니</title>
+    <style>
+        body{font-family:system-ui,sans-serif;background:#faf9fb;margin:0}
+        .container{max-width:1100px;margin:0 auto;padding:20px}
+        .header{display:flex;justify-content:space-between;align-items:center;padding:20px 0;border-bottom:1px solid #ece7f6}
+        .brand{font-size:24px;font-weight:800;color:#6b47d6;text-decoration:none}
+        .cart-item{background:#fff;border:1px solid #ece7f6;border-radius:12px;padding:20px;margin-bottom:15px;display:flex;align-items:center;gap:15px}
+        .item-img{width:80px;height:80px;background:#f6f2ff;border-radius:8px;background-size:cover;background-position:center}
+        .item-info{flex:1}
+        .item-name{font-weight:600;margin-bottom:5px}
+        .item-price{color:#6b47d6;font-weight:700}
+        .quantity-controls{display:flex;align-items:center;gap:10px}
+        .qty-btn{width:30px;height:30px;border:1px solid #ece7f6;background:#fff;border-radius:6px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+        .qty-input{width:50px;text-align:center;border:1px solid #ece7f6;border-radius:6px;padding:5px}
+        .remove-btn{color:#e74c3c;text-decoration:none;padding:8px 12px;border:1px solid #e74c3c;border-radius:6px;font-size:14px}
+        .cart-summary{background:#fff;border:1px solid #ece7f6;border-radius:12px;padding:20px;margin-top:20px}
+        .summary-row{display:flex;justify-content:space-between;margin-bottom:10px}
+        .total{font-size:18px;font-weight:700;color:#6b47d6;border-top:1px solid #ece7f6;padding-top:15px;margin-top:15px}
+        .checkout-btn{width:100%;padding:15px;background:#6b47d6;color:#fff;border:none;border-radius:8px;font-size:16px;font-weight:600;cursor:pointer;margin-top:15px}
+        .empty-cart{text-align:center;padding:60px 20px;color:#7c7587}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <a href="index.html" class="brand">Kolon</a>
+            <div>
+                <a href="mypage.html" style="margin-right:15px;color:#6b47d6;text-decoration:none">마이페이지</a>
+                <a href="#" onclick="logout()" style="color:#e74c3c;text-decoration:none">로그아웃</a>
+            </div>
+        </div>
+        
+        <h2>장바구니</h2>
+        
+        <div id="cartItems"></div>
+        <div id="cartSummary" class="cart-summary" style="display:none">
+            <div class="summary-row">
+                <span>상품금액</span>
+                <span id="subtotal">₩0</span>
+            </div>
+            <div class="summary-row">
+                <span>배송비</span>
+                <span>무료</span>
+            </div>
+            <div class="summary-row total">
+                <span>총 결제금액</span>
+                <span id="total">₩0</span>
+            </div>
+            <button class="checkout-btn" onclick="checkout()">결제하기</button>
+        </div>
+    </div>
+
+    <script>
+        function loadCart() {
+            const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+            const container = document.getElementById('cartItems');
+            const summary = document.getElementById('cartSummary');
+            
+            if (cart.length === 0) {
+                container.innerHTML = '<div class="empty-cart"><h3>장바구니가 비어있습니다</h3><p><a href="index.html" style="color:#6b47d6">쇼핑하러 가기</a></p></div>';
+                summary.style.display = 'none';
+                return;
+            }
+            
+            container.innerHTML = '';
+            let total = 0;
+            
+            cart.forEach((item, index) => {
+                const itemTotal = item.price * item.quantity;
+                total += itemTotal;
+                
+                const itemDiv = document.createElement('div');
+                itemDiv.className = 'cart-item';
+                itemDiv.innerHTML = `
+                    <div class="item-img" style="background-image:url('images/${item.image || 'default.jpg'}')"></div>
+                    <div class="item-info">
+                        <div class="item-name">${item.name}</div>
+                        <div class="item-price">₩${item.price.toLocaleString()}</div>
+                    </div>
+                    <div class="quantity-controls">
+                        <button class="qty-btn" onclick="updateQuantity(${index}, -1)">-</button>
+                        <input type="number" class="qty-input" value="${item.quantity}" onchange="setQuantity(${index}, this.value)" min="1">
+                        <button class="qty-btn" onclick="updateQuantity(${index}, 1)">+</button>
+                    </div>
+                    <div>₩${itemTotal.toLocaleString()}</div>
+                    <a href="#" class="remove-btn" onclick="removeItem(${index})">삭제</a>
+                `;
+                container.appendChild(itemDiv);
+            });
+            
+            document.getElementById('subtotal').textContent = `₩${total.toLocaleString()}`;
+            document.getElementById('total').textContent = `₩${total.toLocaleString()}`;
+            summary.style.display = 'block';
+        }
+
+        function updateQuantity(index, change) {
+            const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+            cart[index].quantity = Math.max(1, cart[index].quantity + change);
+            localStorage.setItem('cart', JSON.stringify(cart));
+            loadCart();
+        }
+
+        function setQuantity(index, quantity) {
+            const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+            cart[index].quantity = Math.max(1, parseInt(quantity) || 1);
+            localStorage.setItem('cart', JSON.stringify(cart));
+            loadCart();
+        }
+
+        function removeItem(index) {
+            if (confirm('이 상품을 장바구니에서 제거하시겠습니까?')) {
+                const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+                cart.splice(index, 1);
+                localStorage.setItem('cart', JSON.stringify(cart));
+                loadCart();
+            }
+        }
+
+        function checkout() {
+            const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+            if (cart.length === 0) {
+                alert('장바구니가 비어있습니다.');
+                return;
+            }
+            
+            const userToken = localStorage.getItem('userToken');
+            if (!userToken) {
+                alert('로그인이 필요합니다.');
+                window.location.href = 'login.html';
+                return;
+            }
+            
+            window.location.href = 'checkout.html';
+        }
+
+        function logout() {
+            localStorage.clear();
+            window.location.href = 'index.html';
+        }
+
+        document.addEventListener('DOMContentLoaded', loadCart);
+    </script>
+</body>
+</html>

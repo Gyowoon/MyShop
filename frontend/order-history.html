@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <title>Kolon - 주문내역</title>
+    <style>
+        body{font-family:system-ui,sans-serif;background:#faf9fb;margin:0}
+        .container{max-width:1000px;margin:0 auto;padding:20px}
+        .header{display:flex;justify-content:space-between;align-items:center;padding:20px 0;border-bottom:1px solid #ece7f6}
+        .brand{font-size:24px;font-weight:800;color:#6b47d6;text-decoration:none}
+        .filter-tabs{display:flex;gap:10px;margin:20px 0;border-bottom:1px solid #ece7f6}
+        .filter-tab{padding:10px 15px;background:none;border:none;cursor:pointer;color:#7c7587;border-bottom:2px solid transparent}
+        .filter-tab.active{color:#6b47d6;border-bottom-color:#6b47d6;font-weight:600}
+        .order-item{background:#fff;border:1px solid #ece7f6;border-radius:12px;padding:20px;margin-bottom:15px}
+        .order-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;padding-bottom:15px;border-bottom:1px solid #f0f0f0}
+        .order-date{color:#7c7587;font-size:14px}
+        .order-status{padding:4px 8px;border-radius:4px;font-size:12px;font-weight:600}
+        .status-paid{background:#e8f5e8;color:#27ae60}
+        .status-preparing{background:#fff3cd;color:#856404}
+        .status-shipping{background:#d1ecf1;color:#0c5460}
+        .status-delivered{background:#f8d7da;color:#721c24}
+        .order-products{display:flex;flex-direction:column;gap:10px}
+        .product-summary{display:flex;justify-content:space-between;align-items:center}
+        .order-total{text-align:right;margin-top:15px;padding-top:15px;border-top:1px solid #f0f0f0}
+        .total-amount{font-size:18px;font-weight:700;color:#6b47d6}
+        .view-detail-btn{padding:6px 12px;background:#6b47d6;color:#fff;border:none;border-radius:4px;cursor:pointer;text-decoration:none;font-size:14px}
+        .empty-orders{text-align:center;padding:60px 20px;color:#7c7587}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <a href="index.html" class="brand">Kolon</a>
+            <a href="mypage.html" style="color:#6b47d6;text-decoration:none">← 마이페이지</a>
+        </div>
+        
+        <h2>주문내역</h2>
+        
+        <div class="filter-tabs">
+            <button class="filter-tab active" onclick="filterOrders('all')">전체</button>
+            <button class="filter-tab" onclick="filterOrders('결제완료')">결제완료</button>
+            <button class="filter-tab" onclick="filterOrders('배송준비중')">배송준비중</button>
+            <button class="filter-tab" onclick="filterOrders('배송중')">배송중</button>
+            <button class="filter-tab" onclick="filterOrders('배송완료')">배송완료</button>
+        </div>
+        
+        <div id="ordersList"></div>
+    </div>
+
+    <script>
+        let allOrders = [];
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadOrders();
+        });
+
+        function loadOrders() {
+            // localStorage에서 주문 내역 불러오기 (실제로는 API 호출)
+            allOrders = JSON.parse(localStorage.getItem('orders') || '[]');
+            
+            if (allOrders.length === 0) {
+                // 샘플 주문 데이터 추가
+                allOrders = [
+                    {
+                        orderId: Date.now(),
+                        orderDate: new Date().toISOString(),
+                        status: '결제완료',
+                        items: [
+                            {name: '후드티', quantity: 1, price: 89000},
+                            {name: '청바지', quantity: 1, price: 129000}
+                        ],
+                        total: 218000,
+                        recipient: '홍길동',
+                        address: '서울시 강남구 테헤란로 123'
+                    }
+                ];
+                localStorage.setItem('orders', JSON.stringify(allOrders));
+            }
+            
+            displayOrders(allOrders);
+        }
+
+        function filterOrders(status) {
+            // 탭 활성화
+            document.querySelectorAll('.filter-tab').forEach(tab => tab.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            const filteredOrders = status === 'all' 
+                ? allOrders 
+                : allOrders.filter(order => order.status === status);
+            
+            displayOrders(filteredOrders);
+        }
+
+        function displayOrders(orders) {
+            const container = document.getElementById('ordersList');
+            
+            if (orders.length === 0) {
+                container.innerHTML = '<div class="empty-orders"><h3>주문 내역이 없습니다</h3><p><a href="index.html" style="color:#6b47d6">쇼핑하러 가기</a></p></div>';
+                return;
+            }
+            
+            container.innerHTML = '';
+            
+            orders.forEach(order => {
+                const orderDiv = document.createElement('div');
+                orderDiv.className = 'order-item';
+                
+                const statusClass = getStatusClass(order.status);
+                
+                orderDiv.innerHTML = `
+                    <div class="order-header">
+                        <div>
+                            <div>주문번호: ${order.orderId}</div>
+                            <div class="order-date">${new Date(order.orderDate).toLocaleDateString()}</div>
+                        </div>
+                        <div>
+                            <span class="order-status ${statusClass}">${order.status}</span>
+                            <a href="order-detail.html?id=${order.orderId}" class="view-detail-btn" style="margin-left:10px">상세보기</a>
+                        </div>
+                    </div>
+                    
+                    <div class="order-products">
+                        ${order.items.map(item => `
+                            <div class="product-summary">
+                                <div><strong>${item.name}</strong> x ${item.quantity}</div>
+                                <div>₩${(item.price * item.quantity).toLocaleString()}</div>
+                            </div>
+                        `).join('')}
+                    </div>
+                    
+                    <div class="order-total">
+                        <div class="total-amount">총 결제금액: ₩${order.total.toLocaleString()}</div>
+                    </div>
+                `;
+                
+                container.appendChild(orderDiv);
+            });
+        }
+
+        function getStatusClass(status) {
+            switch (status) {
+                case '결제완료': return 'status-paid';
+                case '배송준비중': return 'status-preparing';
+                case '배송중': return 'status-shipping';
+                case '배송완료': return 'status-delivered';
+                default: return 'status-paid';
+            }
+        }
+    </script>
+</body>
+</html>

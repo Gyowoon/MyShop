@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <title>Kolon - 포인트</title>
+    <style>
+        body{font-family:system-ui,sans-serif;background:#faf9fb;margin:0}
+        .container{max-width:800px;margin:0 auto;padding:20px}
+        .header{display:flex;justify-content:space-between;align-items:center;padding:20px 0;border-bottom:1px solid #ece7f6}
+        .brand{font-size:24px;font-weight:800;color:#6b47d6;text-decoration:none}
+        .points-summary{background:#fff;border:1px solid #ece7f6;border-radius:12px;padding:20px;margin-bottom:20px;text-align:center}
+        .points-balance{font-size:32px;font-weight:700;color:#6b47d6;margin:10px 0}
+        .transaction-item{background:#fff;border:1px solid #ece7f6;border-radius:12px;padding:15px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center}
+        .transaction-info h4{margin:0 0 5px 0}
+        .transaction-info p{margin:0;color:#7c7587;font-size:14px}
+        .transaction-amount{font-weight:600}
+        .amount-plus{color:#27ae60}
+        .amount-minus{color:#e74c3c}
+        .empty-state{text-align:center;padding:40px;color:#7c7587}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <a href="index.html" class="brand">Kolon</a>
+            <a href="mypage.html" style="color:#6b47d6;text-decoration:none">← 마이페이지</a>
+        </div>
+        
+        <h2>포인트</h2>
+        
+        <div class="points-summary">
+            <h3>현재 보유 포인트</h3>
+            <div class="points-balance" id="currentPoints">0P</div>
+        </div>
+        
+        <h3>포인트 사용 내역</h3>
+        <div id="pointsHistory"></div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const userPoints = localStorage.getItem('userPoints') || '0';
+            const userId = localStorage.getItem('userId');
+            
+            document.getElementById('currentPoints').textContent = `${parseInt(userPoints).toLocaleString()}P`;
+            
+            try {
+                // API에서 포인트 내역 가져오기
+                const response = await fetch(`/api/account/points?user_id=${userId}`);
+                if (response.ok) {
+                    const data = await response.json();
+                    displayPointsHistory(data.transactions);
+                } else {
+                    // 임시 데이터 표시
+                    displayDummyHistory();
+                }
+            } catch (error) {
+                console.error('포인트 내역 로드 실패:', error);
+                displayDummyHistory();
+            }
+        });
+
+        function displayPointsHistory(transactions) {
+            const container = document.getElementById('pointsHistory');
+            
+            if (!transactions || transactions.length === 0) {
+                container.innerHTML = '<div class="empty-state">포인트 사용 내역이 없습니다.</div>';
+                return;
+            }
+            
+            container.innerHTML = '';
+            transactions.forEach(transaction => {
+                const item = document.createElement('div');
+                item.className = 'transaction-item';
+                
+                const isPositive = transaction.delta > 0;
+                const amountClass = isPositive ? 'amount-plus' : 'amount-minus';
+                const sign = isPositive ? '+' : '';
+                
+                item.innerHTML = `
+                    <div class="transaction-info">
+                        <h4>${transaction.reason}</h4>
+                        <p>${new Date(transaction.created_at).toLocaleDateString()}</p>
+                        ${transaction.note ? `<p><small>${transaction.note}</small></p>` : ''}
+                    </div>
+                    <div class="transaction-amount ${amountClass}">
+                        ${sign}${Math.abs(transaction.delta).toLocaleString()}P
+                    </div>
+                `;
+                container.appendChild(item);
+            });
+        }
+
+        function displayDummyHistory() {
+            const dummyTransactions = [
+                {
+                    reason: '회원가입 축하금',
+                    delta: 100000,
+                    created_at: new Date().toISOString(),
+                    note: '신규 회원 가입을 축하합니다!'
+                }
+            ];
+            displayPointsHistory(dummyTransactions);
+        }
+    </script>
+</body>
+</html>

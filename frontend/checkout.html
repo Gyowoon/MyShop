@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <title>Kolon - 결제</title>
+    <style>
+        body{font-family:system-ui,sans-serif;background:#faf9fb;margin:0}
+        .container{max-width:800px;margin:0 auto;padding:20px}
+        .header{display:flex;justify-content:space-between;align-items:center;padding:20px 0;border-bottom:1px solid #ece7f6}
+        .brand{font-size:24px;font-weight:800;color:#6b47d6;text-decoration:none}
+        .checkout-section{background:#fff;border:1px solid #ece7f6;border-radius:12px;padding:20px;margin-bottom:20px}
+        .section-title{font-size:18px;font-weight:600;margin-bottom:15px;color:#2d2a34}
+        .form-group{margin-bottom:15px}
+        .form-group label{display:block;margin-bottom:5px;font-weight:500}
+        .form-group input, .form-group select, .form-group textarea{width:100%;padding:10px;border:1px solid #ece7f6;border-radius:6px}
+        .order-item{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #f0f0f0}
+        .points-section{background:#f6f2ff;padding:15px;border-radius:8px;margin:15px 0}
+        .points-input{display:flex;gap:10px;align-items:center}
+        .points-input input{flex:1}
+        .points-btn{padding:8px 12px;background:#6b47d6;color:#fff;border:none;border-radius:4px;cursor:pointer}
+        .payment-summary{background:#fff;border:1px solid #ece7f6;border-radius:12px;padding:20px;margin-top:20px}
+        .summary-row{display:flex;justify-content:space-between;margin-bottom:10px}
+        .total{font-size:18px;font-weight:700;color:#6b47d6;border-top:1px solid #ece7f6;padding-top:15px;margin-top:15px}
+        .payment-btn{width:100%;padding:15px;background:#6b47d6;color:#fff;border:none;border-radius:8px;font-size:16px;font-weight:600;cursor:pointer;margin-top:15px}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <a href="index.html" class="brand">Kolon</a>
+        </div>
+        
+        <h2>주문/결제</h2>
+        
+        <div class="checkout-section">
+            <div class="section-title">배송 정보</div>
+            <form id="checkoutForm">
+                <div class="form-group">
+                    <label for="recipient">수령인</label>
+                    <input type="text" id="recipient" name="recipient" required>
+                </div>
+                <div class="form-group">
+                    <label for="phone">연락처</label>
+                    <input type="tel" id="phone" name="phone" required>
+                </div>
+                <div class="form-group">
+                    <label for="address">배송주소</label>
+                    <input type="text" id="address" name="address" required>
+                </div>
+                <div class="form-group">
+                    <label for="memo">주문 메모</label>
+                    <textarea id="memo" name="memo" rows="3" placeholder="배송 시 요청사항을 입력해주세요"></textarea>
+                </div>
+            </form>
+        </div>
+        
+        <div class="checkout-section">
+            <div class="section-title">주문 상품</div>
+            <div id="orderItems"></div>
+        </div>
+        
+        <div class="checkout-section">
+            <div class="section-title">포인트 사용</div>
+            <div class="points-section">
+                <p>보유 포인트: <span id="userPoints">0</span>P</p>
+                <div class="points-input">
+                    <input type="number" id="pointsToUse" placeholder="사용할 포인트" min="0" max="0">
+                    <button type="button" class="points-btn" onclick="useAllPoints()">전액사용</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="payment-summary">
+            <div class="summary-row">
+                <span>상품금액</span>
+                <span id="subtotal">₩0</span>
+            </div>
+            <div class="summary-row">
+                <span>배송비</span>
+                <span>무료</span>
+            </div>
+            <div class="summary-row">
+                <span>포인트 사용</span>
+                <span id="pointsUsed">-₩0</span>
+            </div>
+            <div class="summary-row total">
+                <span>최종 결제금액</span>
+                <span id="finalTotal">₩0</span>
+            </div>
+            <button class="payment-btn" onclick="processPayment()">결제하기</button>
+        </div>
+    </div>
+
+    <script>
+        let subtotalAmount = 0;
+        let userPoints = 0;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadCheckoutData();
+            setupPointsInput();
+        });
+
+        function loadCheckoutData() {
+            const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+            const container = document.getElementById('orderItems');
+            userPoints = parseInt(localStorage.getItem('userPoints')) || 0;
+            
+            document.getElementById('userPoints').textContent = userPoints.toLocaleString();
+            document.getElementById('pointsToUse').max = userPoints;
+            
+            subtotalAmount = 0;
+            cart.forEach(item => {
+                const itemTotal = item.price * item.quantity;
+                subtotalAmount += itemTotal;
+                
+                const itemDiv = document.createElement('div');
+                itemDiv.className = 'order-item';
+                itemDiv.innerHTML = `
+                    <div>
+                        <strong>${item.name}</strong><br>
+                        <small>수량: ${item.quantity}개</small>
+                    </div>
+                    <div>₩${itemTotal.toLocaleString()}</div>
+                `;
+                container.appendChild(itemDiv);
+            });
+            
+            updateTotals();
+        }
+
+        function setupPointsInput() {
+            document.getElementById('pointsToUse').addEventListener('input', updateTotals);
+        }
+
+        function useAllPoints() {
+            const maxPoints = Math.min(userPoints, subtotalAmount);
+            document.getElementById('pointsToUse').value = maxPoints;
+            updateTotals();
+        }
+
+        function updateTotals() {
+            const pointsToUse = Math.min(
+                parseInt(document.getElementById('pointsToUse').value) || 0,
+                userPoints,
+                subtotalAmount
+            );
+            
+            document.getElementById('subtotal').textContent = `₩${subtotalAmount.toLocaleString()}`;
+            document.getElementById('pointsUsed').textContent = `-₩${pointsToUse.toLocaleString()}`;
+            document.getElementById('finalTotal').textContent = `₩${(subtotalAmount - pointsToUse).toLocaleString()}`;
+        }
+
+        async function processPayment() {
+            const form = document.getElementById('checkoutForm');
+            const formData = new FormData(form);
+            
+            if (!form.checkValidity()) {
+                alert('배송 정보를 모두 입력해주세요.');
+                return;
+            }
+            
+            const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+            const pointsToUse = parseInt(document.getElementById('pointsToUse').value) || 0;
+            const finalAmount = subtotalAmount - pointsToUse;
+            
+            const orderData = {
+                items: cart,
+                recipient: formData.get('recipient'),
+                phone: formData.get('phone'),
+                address: formData.get('address'),
+                memo: formData.get('memo'),
+                subtotal: subtotalAmount,
+                pointsUsed: pointsToUse,
+                total: finalAmount,
+                userId: localStorage.getItem('userId')
+            };
+            
+            try {
+                // 주문 생성 API 호출 (실제 구현시)
+                /*
+                const response = await fetch('/api/orders', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('userToken')}`
+                    },
+                    body: JSON.stringify(orderData)
+                });
+                */
+                
+                // 임시로 localStorage에 주문 저장
+                const orders = JSON.parse(localStorage.getItem('orders') || '[]');
+                const newOrder = {
+                    ...orderData,
+                    orderId: Date.now(),
+                    status: '결제완료',
+                    orderDate: new Date().toISOString()
+                };
+                orders.push(newOrder);
+                localStorage.setItem('orders', JSON.stringify(orders));
+                
+                // 포인트 차감
+                const newPoints = userPoints - pointsToUse;
+                localStorage.setItem('userPoints', newPoints);
+                
+                // 장바구니 비우기
+                localStorage.removeItem('cart');
+                
+                alert('결제가 완료되었습니다!');
+                window.location.href = 'order-history.html';
+                
+            } catch (error) {
+                console.error('결제 오류:', error);
+                alert('결제 처리 중 오류가 발생했습니다.');
+            }
+        }
+    </script>
+</body>
+</html>

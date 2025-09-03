@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <title>Kolon - 상품 상세</title>
+    <style>
+        body{font-family:system-ui,sans-serif;background:#faf9fb;margin:0}
+        .container{max-width:1000px;margin:0 auto;padding:20px}
+        .header{display:flex;justify-content:space-between;align-items:center;padding:20px 0;border-bottom:1px solid #ece7f6}
+        .brand{font-size:24px;font-weight:800;color:#6b47d6;text-decoration:none}
+        .product-detail{display:grid;grid-template-columns:1fr 1fr;gap:40px;margin:30px 0}
+        .product-image{width:100%;height:500px;background:#f6f2ff;border-radius:12px;background-size:cover;background-position:center}
+        .product-info h1{font-size:28px;margin-bottom:20px}
+        .product-price{font-size:32px;font-weight:700;color:#6b47d6;margin-bottom:20px}
+        .product-options{margin:20px 0}
+        .option-group{margin-bottom:15px}
+        .option-group label{display:block;margin-bottom:5px;font-weight:600}
+        .option-group select{width:100%;padding:10px;border:1px solid #ece7f6;border-radius:6px}
+        .quantity-section{display:flex;align-items:center;gap:10px;margin:20px 0}
+        .qty-btn{width:40px;height:40px;border:1px solid #ece7f6;background:#fff;border-radius:6px;cursor:pointer}
+        .qty-input{width:80px;text-align:center;border:1px solid #ece7f6;border-radius:6px;padding:10px}
+        .action-buttons{display:flex;gap:10px;margin:20px 0}
+        .btn{padding:15px 30px;border:none;border-radius:8px;font-size:16px;font-weight:600;cursor:pointer;flex:1}
+        .btn-cart{background:#fff;color:#6b47d6;border:1px solid #6b47d6}
+        .btn-buy{background:#6b47d6;color:#fff}
+        .product-description{margin-top:30px;padding:20px;background:#fff;border-radius:12px}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <a href="index.html" class="brand">Kolon</a>
+            <div>
+                <a href="cart.html" style="margin-right:15px;color:#6b47d6;text-decoration:none">🛒</a>
+                <a href="mypage.html" style="color:#6b47d6;text-decoration:none">👤</a>
+            </div>
+        </div>
+        
+        <div class="product-detail">
+            <div>
+                <div class="product-image" id="productImage"></div>
+            </div>
+            
+            <div class="product-info">
+                <h1 id="productName">상품명</h1>
+                <div class="product-price" id="productPrice">₩0</div>
+                
+                <div class="product-options">
+                    <div class="option-group">
+                        <label for="color">색상</label>
+                        <select id="color">
+                            <option value="black">블랙</option>
+                            <option value="white">화이트</option>
+                            <option value="gray">그레이</option>
+                        </select>
+                    </div>
+                    
+                    <div class="option-group">
+                        <label for="size">사이즈</label>
+                        <select id="size">
+                            <option value="S">S</option>
+                            <option value="M">M</option>
+                            <option value="L">L</option>
+                            <option value="XL">XL</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="quantity-section">
+                    <span>수량:</span>
+                    <button class="qty-btn" onclick="updateQuantity(-1)">-</button>
+                    <input type="number" class="qty-input" id="quantity" value="1" min="1">
+                    <button class="qty-btn" onclick="updateQuantity(1)">+</button>
+                </div>
+                
+                <div class="action-buttons">
+                    <button class="btn btn-cart" onclick="addToCart()">장바구니</button>
+                    <button class="btn btn-buy" onclick="buyNow()">구매하기</button>
+                </div>
+                
+                <div class="product-description">
+                    <h3>상품 설명</h3>
+                    <div id="productDescription">상품 설명이 여기에 표시됩니다.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentProduct = null;
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const productId = urlParams.get('id');
+            
+            if (productId) {
+                await loadProduct(productId);
+            }
+        });
+
+        async function loadProduct(productId) {
+            try {
+                // API에서 상품 정보 가져오기
+                const response = await fetch(`/api/products/${productId}`);
+                if (response.ok) {
+                    currentProduct = await response.json();
+                    displayProduct(currentProduct);
+                } else {
+                    showDummyProduct(productId);
+                }
+            } catch (error) {
+                console.error('상품 로드 실패:', error);
+                showDummyProduct(productId);
+            }
+        }
+
+        function showDummyProduct(productId) {
+            currentProduct = {
+                id: productId,
+                name: '샘플 상품',
+                price: 89000,
+                image: 'sample.jpg',
+                description: '이 상품은 샘플 상품입니다. 실제 상품 정보는 백엔드 API에서 제공됩니다.'
+            };
+            displayProduct(currentProduct);
+        }
+
+        function displayProduct(product) {
+            document.getElementById('productName').textContent = product.name;
+            document.getElementById('productPrice').textContent = `₩${product.price.toLocaleString()}`;
+            document.getElementById('productImage').style.backgroundImage = `url('images/${product.image || 'default.jpg'}')`;
+            document.getElementById('productDescription').textContent = product.description || '상품 설명이 없습니다.';
+            
+            // 최근 본 상품에 추가
+            addToRecentlyViewed(product);
+        }
+
+        function updateQuantity(change) {
+            const quantityInput = document.getElementById('quantity');
+            const newQuantity = Math.max(1, parseInt(quantityInput.value) + change);
+            quantityInput.value = newQuantity;
+        }
+
+        function addToCart() {
+            if (!currentProduct) return;
+            
+            const quantity = parseInt(document.getElementById('quantity').value);
+            const color = document.getElementById('color').value;
+            const size = document.getElementById('size').value;
+            
+            const cartItem = {
+                ...currentProduct,
+                quantity: quantity,
+                options: { color, size }
+            };
+            
+            let cart = JSON.parse(localStorage.getItem('cart') || '[]');
+            
+            // 동일한 상품과 옵션이 있는지 확인
+            const existingIndex = cart.findIndex(item => 
+                item.id === cartItem.id && 
+                JSON.stringify(item.options) === JSON.stringify(cartItem.options)
+            );
+            
+            if (existingIndex > -1) {
+                cart[existingIndex].quantity += quantity;
+            } else {
+                cart.push(cartItem);
+            }
+            
+            localStorage.setItem('cart', JSON.stringify(cart));
+            
+            alert('장바구니에 추가되었습니다!');
+        }
+
+        function buyNow() {
+            addToCart();
+            window.location.href = 'cart.html';
+        }
+
+        function addToRecentlyViewed(product) {
+            let recent = JSON.parse(localStorage.getItem('recentlyViewed') || '[]');
+            recent = recent.filter(p => p.id !== product.id);
+            recent.unshift({
+                ...product,
+                viewedAt: new Date().toISOString()
+            });
+            recent = recent.slice(0, 10);
+            localStorage.setItem('recentlyViewed', JSON.stringify(recent));
+        }
+    </script>
+</body>
+</html>
